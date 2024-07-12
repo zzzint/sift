@@ -1,1 +1,1 @@
-export * from './lib/sift';
+export { makeGenerator } from './lib/api';
