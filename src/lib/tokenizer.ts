@@ -1,7 +1,13 @@
 import { via } from 'src/util';
 import { StateNotFlushableError, InvalidTransition } from './tokenizer.errors';
-import { Token, TokenizerState as State, Utf8, PrimitiveToken } from './tokenizer.types';
+import {
+  Token,
+  TokenizerState as State,
+  Utf8,
+  PrimitiveToken,
+} from './tokenizer.types';
 
+/** For generating Tokens from a UTF-8 Buffer. */
 export class Tokenizer {
   #state: State = State.Yielded;
   #buffer: Array<number> = [];
@@ -25,8 +31,10 @@ export class Tokenizer {
     if (!this.isYieldable) throw new StateNotFlushableError(this.#state);
 
     const token = via(() => {
-      if (this.#state === State.YieldableTrue) return { kind: 'bool', value: true };
-      if (this.#state === State.YieldableFalse) return { kind: 'bool', value: false };
+      if (this.#state === State.YieldableTrue)
+        return { kind: 'bool', value: true };
+      if (this.#state === State.YieldableFalse)
+        return { kind: 'bool', value: false };
       if (this.#state === State.YieldableNull) return { kind: 'null' };
       if (this.#state === State.YieldableNumber)
         return { kind: 'number', value: this.convertBufferToNumber() };
@@ -60,10 +68,14 @@ export class Tokenizer {
 
     if (byte === Utf8.Comma || byte === Utf8.RightSquareBracket) {
       if (this.isPartialLiteral) {
-        if (this.#state === State.PartialNumber) this.#state = State.YieldableNumber;
-        if (this.#state === State.PartialFalse4) this.#state = State.YieldableFalse;
-        if (this.#state === State.PartialTrue3) this.#state = State.YieldableTrue;
-        if (this.#state === State.PartialNull3) this.#state = State.YieldableNull;
+        if (this.#state === State.PartialNumber)
+          this.#state = State.YieldableNumber;
+        if (this.#state === State.PartialFalse4)
+          this.#state = State.YieldableFalse;
+        if (this.#state === State.PartialTrue3)
+          this.#state = State.YieldableTrue;
+        if (this.#state === State.PartialNull3)
+          this.#state = State.YieldableNull;
 
         yield this.flush();
       }
@@ -83,8 +95,10 @@ export class Tokenizer {
 
       case State.Yielded: {
         if (byte === Utf8.LatinSmallLetterN) this.#state = State.PartialNull1;
-        else if (byte === Utf8.LatinSmallLetterT) this.#state = State.PartialTrue1;
-        else if (byte === Utf8.LatinSmallLetterF) this.#state = State.PartialFalse1;
+        else if (byte === Utf8.LatinSmallLetterT)
+          this.#state = State.PartialTrue1;
+        else if (byte === Utf8.LatinSmallLetterF)
+          this.#state = State.PartialFalse1;
         else throw new InvalidTransition({ from: this.#state, to: byte });
         break;
       }
@@ -164,21 +178,31 @@ export class Tokenizer {
   }
 
   private toPunctuation(byte: number) {
-    this.#buffer.push(byte);
     switch (this.#state) {
       case State.Yielded: {
-        if (byte === Utf8.QuotationMark) this.#state = State.PartialString;
+        if (byte === Utf8.QuotationMark) {
+          this.#state = State.PartialString;
+          // Don't add the opening quote to the buffer
+        }
         break;
       }
       case State.PartialString: {
-        if (byte === Utf8.ReverseSolidus) this.#state = State.EscapedChar;
-        else if (byte === Utf8.QuotationMark) this.#state = State.YieldableString;
+        if (byte === Utf8.ReverseSolidus) {
+          this.#state = State.EscapedChar;
+          this.#buffer.push(byte);
+        } else if (byte === Utf8.QuotationMark) {
+          this.#state = State.YieldableString;
+          // Don't add the closing quote to the buffer
+        } else {
+          this.#buffer.push(byte);
+        }
         break;
       }
       case State.EscapedChar: {
-        if (byte === Utf8.QuotationMark || byte === Utf8.ReverseSolidus)
+        if (byte === Utf8.QuotationMark || byte === Utf8.ReverseSolidus) {
           this.#state = State.PartialString;
-
+        }
+        this.#buffer.push(byte);
         break;
       }
       default: {

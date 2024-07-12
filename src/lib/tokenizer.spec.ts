@@ -1,66 +1,106 @@
-import { mockJsonStrings } from 'src/util';
+import { mockJsonStrings } from 'src/util/mocks';
 import { Tokenizer } from './tokenizer';
 import { Token, Utf8 } from './tokenizer.types';
 
-describe(Tokenizer, () => {
+describe(Tokenizer.name, () => {
   const tokenizer = new Tokenizer();
 
   describe(Tokenizer['prototype'].write.name, () => {
-    it.only('Can process an empty object', () => {
-      const generator = tokenizer.write(Buffer.from(mockJsonStrings.simpleObject));
+    it('Can process an empty object', () => {
+      const generator = tokenizer.write(
+        Buffer.from(mockJsonStrings.simpleObject)
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
     });
 
     it('Can process an empty array', () => {
-      const generator = tokenizer.write(Buffer.from(mockJsonStrings.simpleArray));
+      const generator = tokenizer.write(
+        Buffer.from(mockJsonStrings.simpleArray)
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-start' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-end' }));
     });
 
     it('Can process an object containing a single key and value', () => {
-      const generator = tokenizer.write(Buffer.from(mockJsonStrings.simpleKeyValue));
+      const generator = tokenizer.write(
+        Buffer.from(mockJsonStrings.simpleKeyValue)
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"key"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'key' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"value"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'value' })
+      );
     });
 
     it('Can process an object containing string, number, boolean, null, and nested values', () => {
-      const generator = tokenizer.write(Buffer.from(mockJsonStrings.comprehensive));
+      const generator = tokenizer.write(
+        Buffer.from(mockJsonStrings.comprehensive)
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"number"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'number' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'number', value: 42 }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'number', value: 42 })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"string"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'string' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"Hello, world!"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'Hello, world!' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"boolean"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'boolean' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'bool', value: true }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'bool', value: true })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"null"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'null' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'null' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"array"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'array' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'number', value: 1 }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'number', value: 1 })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'number', value: 2 }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'number', value: 2 })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'number', value: 3 }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'number', value: 3 })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-end' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"object"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'object' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"nested"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'nested' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"value"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'value' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
     });
@@ -69,60 +109,102 @@ describe(Tokenizer, () => {
       const generator = tokenizer.write(Buffer.from(mockJsonStrings.records));
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-start' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"id"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'id' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'number', value: 1 }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'number', value: 1 })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"name"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'name' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"Alice"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'Alice' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"id"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'id' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'number', value: 2 }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'number', value: 2 })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"name"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'name' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"Bob"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'Bob' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"id"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'id' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'number', value: 3 }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'number', value: 3 })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"name"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'name' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"Charlie"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'Charlie' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-end' }));
     });
 
     it('Can process a deeply nested object', () => {
-      const generator = tokenizer.write(Buffer.from(mockJsonStrings.deeplyNested));
+      const generator = tokenizer.write(
+        Buffer.from(mockJsonStrings.deeplyNested)
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"deeply"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'deeply' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"nested"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'nested' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"object"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'object' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"with"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'with' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"an"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'an' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"array"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'array' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"inside"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'inside' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"it"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'it' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-end' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
@@ -133,16 +215,20 @@ describe(Tokenizer, () => {
     it('Can process a heavily escaped string', () => {
       const generator = tokenizer.write(Buffer.from(mockJsonStrings.escapes));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"escapes"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'escapes' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(
-        t({ kind: 'string', value: '"\\"Quote\\", \\\\Backslash\\n, \\t Tab"' })
+        t({ kind: 'string', value: '\\"Quote\\", \\\\Backslash\\n, \\t Tab' })
       );
       expect(generator.next().value).toStrictEqual(t({ kind: 'comma' }));
-      expect(generator.next().value).toStrictEqual(t({ kind: 'string', value: '"unicode"' }));
+      expect(generator.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'unicode' })
+      );
       expect(generator.next().value).toStrictEqual(t({ kind: 'colon' }));
       expect(generator.next().value).toStrictEqual(
-        t({ kind: 'string', value: '"\\u00A9 \\u2665 \\uD83D\\uDE00"' })
+        t({ kind: 'string', value: '\\u00A9 \\u2665 \\uD83D\\uDE00' })
       );
     });
   });
