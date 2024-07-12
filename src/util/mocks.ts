@@ -1,7 +1,8 @@
 import { ReadableStream } from 'stream/web';
+import { Json } from './types';
 
 export const generateMockJsonStreamFromInput = (
-  json: Record<string, unknown> | Array<Record<string, unknown>>
+  json: Json
 ): ReadableStream<Buffer> => {
   const asBuffer = Buffer.from(JSON.stringify(json));
   const asStream = new ReadableStream<Buffer>({
@@ -47,8 +48,10 @@ export const mockJsonStrings = {
   simpleArrayValues: '[1, 2, 3]',
   comprehensive:
     '{"number": 42, "string": "Hello, world!", "boolean": true, "null": null, "array": [1, 2, 3], "object": {"nested": "value"}}',
-  records: '[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}, {"id": 3, "name": "Charlie"}]',
-  deeplyNested: '{"deeply": {"nested": {"object": {"with": ["an", "array", {"inside": "it"}]}}}}',
+  records:
+    '[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}, {"id": 3, "name": "Charlie"}]',
+  deeplyNested:
+    '{"deeply": {"nested": {"object": {"with": ["an", "array", {"inside": "it"}]}}}}',
   escapes:
     '{"escapes": "\\"Quote\\", \\\\Backslash\\n, \\t Tab", "unicode": "\\u00A9 \\u2665 \\uD83D\\uDE00"}',
 };
