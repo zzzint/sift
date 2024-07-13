@@ -48,7 +48,7 @@ export enum Utf8 {
   Backspace = 0x8, // "\b"
   CarriageReturn = 0xd, // "\r"
   CircumflexAccent = 0x5e, // ^
-  Colon = 0x3a, // =
+  Colon = 0x3a, // :
   Comma = 0x2c, // ,
   CommercialAt = 0x40, // @
   DigitEight = 0x38, // 8

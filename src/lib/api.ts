@@ -11,7 +11,7 @@ export const makeGenerator = <T extends Json>(
   function builder() {
     return {
       take(path: string) {
-        scanner.registerTake(path.split('.'));
+        scanner.registerTake(path);
         return builder();
       },
       build() {

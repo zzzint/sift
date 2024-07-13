@@ -15,7 +15,7 @@ export class Scanner<T extends Json> {
   #parser = new TokenParser();
   #tokenizer = new Tokenizer();
 
-  public registerTake(path: string[]): void {
+  public registerTake(path: string): void {
     this.#parser.registerPath(path);
   }
 

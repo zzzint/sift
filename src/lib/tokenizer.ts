@@ -56,6 +56,11 @@ export class Tokenizer {
   }
 
   private *toSeparator(byte: number): Generator<Token> {
+    if (this.#state === State.PartialNumber) {
+      this.#state = State.YieldableNumber;
+      yield this.flush();
+    }
+
     if (byte === Utf8.Colon) yield { kind: 'colon' };
     if (byte === Utf8.LeftCurlyBracket) yield { kind: 'object-start' };
     if (byte === Utf8.RightCurlyBracket) yield { kind: 'object-end' };
