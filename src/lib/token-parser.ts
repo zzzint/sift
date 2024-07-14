@@ -13,16 +13,19 @@ export class TokenParser {
   #state: State = 'begin';
   #builder: Builder = new Builder();
   #currentKey: string | null = null;
+
   #stacks = {
     mode: Array.from<Mode>([]),
     path: Array.from<string>([]),
   };
 
-  /** A collection of paths that should be included in the Json yielded from this classes write method. */
-  #pathRegistry: Set<string> = new Set();
+  #registries = {
+    /** A collection of paths that should be included in the Json yielded from this classes write method. */
+    path: new Set<string>(),
+  };
 
   public registerPath(path: string) {
-    this.#pathRegistry.add(path);
+    this.#registries.path.add(path);
   }
 
   public *write(tokens: Generator<Token>): Generator<Json> {
@@ -52,17 +55,17 @@ export class TokenParser {
 
   private get currentPathIsRegistered() {
     // TODO: Make this more efficient & ensure via tests that it isn't returning true when it shouldn't
-    if (this.#pathRegistry.size === 0) return true;
+    if (this.#registries.path.size === 0) return true;
     const currentPath = this.#stacks.path;
     const currentPathString = currentPath.join('.');
 
-    const registeredParentSegmentExists = [...this.#pathRegistry].some(
+    const registeredParentSegmentExists = [...this.#registries.path].some(
       (registeredPath) =>
         currentPathString.startsWith(registeredPath + '.') ||
         currentPathString === registeredPath
     );
 
-    const registeredChildSegmentExists = [...this.#pathRegistry].some(
+    const registeredChildSegmentExists = [...this.#registries.path].some(
       (registeredPath) =>
         registeredPath.startsWith(currentPathString + '.') ||
         registeredPath === currentPathString
