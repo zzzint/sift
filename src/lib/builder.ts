@@ -14,41 +14,37 @@ export class Builder {
     return this.#root;
   }
 
-  public addValue(key: BuilderKey = null, value: Json) {
+  public set(key: BuilderKey = null, value: Json) {
     if (this.#stack.length === 0) return this.setRootValue(value);
 
-    this.addValueToParent(this.currentParent, key, value);
+    this.addValueToHead(this.head, key, value);
     if (this.isObjectOrArray(value)) this.#stack.push({ value, key });
   }
 
-  public beginArray(key: BuilderKey = null) {
+  public openArray(key: BuilderKey = null) {
     const newArray: Json[] = [];
-    this.addValue(key, newArray);
+    this.set(key, newArray);
   }
 
-  public beginObject(key: BuilderKey = null) {
+  public openObject(key: BuilderKey = null) {
     const newObject: Json = {};
-    this.addValue(key, newObject);
+    this.set(key, newObject);
   }
 
-  public endContainer() {
-    if (this.#stack.length > 0) {
-      this.#stack.pop();
-    }
+  public closeContainer() {
+    if (this.#stack.length > 0) this.#stack.pop();
+  }
+
+  private get head() {
+    return this.#stack[this.#stack.length - 1].value;
   }
 
   private setRootValue(value: Json) {
     this.#root = value;
-    if (this.isObjectOrArray(value)) {
-      this.#stack.push({ value, key: null });
-    }
+    if (this.isObjectOrArray(value)) this.#stack.push({ value, key: null });
   }
 
-  private get currentParent() {
-    return this.#stack[this.#stack.length - 1].value;
-  }
-
-  private addValueToParent(parent: Json, key: BuilderKey, value: Json) {
+  private addValueToHead(parent: Json, key: BuilderKey, value: Json) {
     if (Array.isArray(parent)) this.addValueToArray(parent, key, value);
     else if (isObject(parent)) this.addValueToObject(parent, key, value);
   }
