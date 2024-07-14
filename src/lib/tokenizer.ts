@@ -173,7 +173,7 @@ export class Tokenizer {
   private toNumberRelated(byte: number) {
     switch (this.#state) {
       case State.Yielded:
-        if (this.isNumber(byte)) {
+        if (this.isNumber(byte) && byte !== Utf8.DigitZero) {
           this.#buffer.push(byte);
           this.#state = State.PartialNumberInteger;
         } else if (byte === Utf8.HyphenMinus) {
