@@ -1,6 +1,9 @@
 import { isObject } from 'src/util';
 import { BuilderKey } from './builder.types';
-import { UnexpectedKeyForContainer } from './builder.errors';
+import {
+  KeyAlreadyInObject,
+  UnexpectedKeyForContainer,
+} from './builder.errors';
 import { Json } from 'src/util/types';
 
 /** For dynamically constructing Json-like structures. */
@@ -54,8 +57,9 @@ export class Builder {
     array.push(value);
   }
 
-  private addValueToObject(obj: Json, key: BuilderKey, value: Json) {
+  private addValueToObject(obj: Json & object, key: BuilderKey, value: Json) {
     if (key === null) throw new UnexpectedKeyForContainer(key, 'object');
+    if (key in obj) throw new KeyAlreadyInObject(key);
     obj[key] = value;
   }
 

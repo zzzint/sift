@@ -7,3 +7,9 @@ export class UnexpectedKeyForContainer extends Error {
     );
   }
 }
+
+export class KeyAlreadyInObject extends Error {
+  constructor(key: BuilderKey) {
+    super(`Key "${key}" already exists in object.`);
+  }
+}

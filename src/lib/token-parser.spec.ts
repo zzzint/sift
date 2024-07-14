@@ -81,7 +81,7 @@ describe(TokenParser.name, () => {
         });
       });
 
-      describe.skip('Parity for invalid Json', () => {
+      describe('Parity for invalid Json', () => {
         it('should throw when encountering a trailing comma', () => {
           const mock = mocks.invalid['trailing-comma'];
           expect(() => tokenizeAndGenerateJson(mock)).toThrow();
