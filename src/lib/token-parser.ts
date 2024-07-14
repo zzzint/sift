@@ -1,22 +1,27 @@
 import { Json } from 'src/util/types';
 import { Builder } from './builder';
 import { InvalidTransition, UnexpectedChar } from './token-parser-errors';
-import { Container, TokenParserState as State } from './token-parser.types';
+import {
+  TokenParserMode as Mode,
+  TokenParserState as State,
+} from './token-parser.types';
 import { isPrimitiveToken } from './tokenizer';
 import { PrimitiveToken, Token, TypeOfToken } from './tokenizer.types';
 
 /** For generating valid Json-like structures from a stream of Tokens. */
 export class TokenParser {
   #state: State = 'begin';
-  #stack: Container[] = [];
   #builder: Builder = new Builder();
   #currentKey: string | null = null;
-  #currentPath: string[] = [];
+  #stacks = {
+    mode: Array.from<Mode>([]),
+    path: Array.from<string>([]),
+  };
 
   /** A collection of paths that should be included in the Json yielded from this classes write method. */
-  #pathRegistry: Set<string[]> = new Set();
+  #pathRegistry: Set<string> = new Set();
 
-  public registerPath(path: string[]) {
+  public registerPath(path: string) {
     this.#pathRegistry.add(path);
   }
 
@@ -37,12 +42,38 @@ export class TokenParser {
     yield this.built;
   }
 
-  private get container() {
-    return this.#stack.at(-1);
+  private get mode() {
+    return this.#stacks.mode.at(-1);
   }
 
   private get built() {
     return this.#builder.root;
+  }
+
+  private get currentPathIsRegistered() {
+    // TODO: Make this more efficient & ensure via tests that it isn't returning true when it shouldn't
+    if (this.#pathRegistry.size === 0) return true;
+    const currentPath = this.#stacks.path;
+    const currentPathString = currentPath.join('.');
+
+    const registeredParentSegmentExists = [...this.#pathRegistry].some(
+      (registeredPath) =>
+        currentPathString.startsWith(registeredPath + '.') ||
+        currentPathString === registeredPath
+    );
+
+    const registeredChildSegmentExists = [...this.#pathRegistry].some(
+      (registeredPath) =>
+        registeredPath.startsWith(currentPathString + '.') ||
+        registeredPath === currentPathString
+    );
+
+    return registeredParentSegmentExists || registeredChildSegmentExists;
+  }
+
+  private setCurrentKey(k: string | null) {
+    this.#currentKey = k;
+    if (k !== null) this.#stacks.path.push(k);
   }
 
   private makeInvalidTransitionError(next: Token): InvalidTransition {
@@ -60,10 +91,12 @@ export class TokenParser {
       this.#state === 'array-comma' ||
       this.#state === 'object-colon'
     ) {
-      this.#builder.beginArray(this.#currentKey);
-      this.#stack.push('array');
+      if (this.currentPathIsRegistered || this.#currentKey === null) {
+        this.#builder.openArray(this.#currentKey);
+      }
+      this.#stacks.mode.push('array');
       this.#state = 'array-start';
-      this.#currentKey = null;
+      this.setCurrentKey(null);
     } else throw this.makeInvalidTransitionError(token);
   }
 
@@ -74,12 +107,12 @@ export class TokenParser {
       case 'array-end':
       case 'object-end': {
         if (
-          this.#stack.pop() !== 'array' &&
+          this.#stacks.mode.pop() !== 'array' &&
           (this.#state === 'array-end' || this.#state === 'object-end')
         ) {
           throw this.makeUnexpectedCharError(token);
         }
-        this.#builder.endContainer();
+        if (this.currentPathIsRegistered) this.#builder.closeContainer();
         this.#state = 'array-end';
         break;
       }
@@ -95,25 +128,27 @@ export class TokenParser {
       this.#state === 'array-comma' ||
       this.#state === 'object-colon'
     ) {
-      this.#builder.beginObject(this.#currentKey);
-      this.#stack.push('object');
+      if (this.currentPathIsRegistered || this.#currentKey === null)
+        this.#builder.openObject(this.#currentKey);
+      this.#stacks.mode.push('object');
       this.#state = 'object-start';
-      this.#currentKey = null;
+      this.setCurrentKey(null);
     } else throw this.makeInvalidTransitionError(token);
   }
 
   private toObjectEnd(token: TypeOfToken<'object-end'>) {
     switch (this.#state) {
+      case 'array-end':
       case 'object-value':
       case 'object-start':
       case 'object-end': {
         if (
-          this.#stack.pop() !== 'object' &&
+          this.#stacks.mode.pop() !== 'object' &&
           (this.#state === 'object-end' || this.#state === 'object-start')
         ) {
           throw this.makeUnexpectedCharError(token);
         }
-        this.#builder.endContainer();
+        this.#builder.closeContainer();
         this.#state = 'object-end';
         break;
       }
@@ -128,14 +163,13 @@ export class TokenParser {
       case 'array-start':
       case 'array-comma':
       case 'object-colon': {
-        const value = token.kind !== 'null' ? token.value : null;
-        this.#builder.addValue(this.#currentKey, value);
+        if (this.currentPathIsRegistered) {
+          const tokenValue = token.kind !== 'null' ? token.value : null;
+          this.#builder.set(this.#currentKey, tokenValue);
+        }
 
-        this.#state =
-          this.#stack[this.#stack.length - 1] === 'array'
-            ? 'array-value'
-            : 'object-value';
-        this.#currentKey = null;
+        this.#state = this.mode === 'array' ? 'array-value' : 'object-value';
+        this.setCurrentKey(null);
         break;
       }
       case 'object-start':
@@ -143,7 +177,8 @@ export class TokenParser {
         if (token.kind !== 'string') {
           throw this.makeInvalidTransitionError(token);
         }
-        this.#currentKey = token.value;
+
+        this.setCurrentKey(token.value);
         this.#state = 'object-key';
         break;
       }
@@ -153,18 +188,18 @@ export class TokenParser {
   }
 
   private toColon(token: TypeOfToken<'colon'>) {
-    if (this.#state === 'object-key') {
-      this.#state = 'object-colon';
-    } else {
-      throw this.makeInvalidTransitionError(token);
-    }
+    if (this.#state === 'object-key') this.#state = 'object-colon';
+    else throw this.makeInvalidTransitionError(token);
   }
 
   private toComma(token: TypeOfToken<'comma'>) {
     if (this.#state === 'array-value') this.#state = 'array-comma';
-    else if (this.#state === 'object-value') this.#state = 'object-comma';
-    else if (this.#state === 'object-end' || this.#state === 'array-end') {
-      this.#state = this.container === 'array' ? 'array-comma' : 'object-comma';
+    else if (this.#state === 'object-value') {
+      this.#state = 'object-comma';
+      this.#stacks.path.pop();
+    } else if (this.#state === 'object-end' || this.#state === 'array-end') {
+      this.#state = this.mode === 'array' ? 'array-comma' : 'object-comma';
+      this.#stacks.path.pop();
     } else throw this.makeInvalidTransitionError(token);
   }
 
@@ -176,6 +211,5 @@ export class TokenParser {
     ) {
       throw this.makeUnexpectedCharError(token);
     }
-    // The parsing is complete, and the result is in this.#builder.root
   }
 }

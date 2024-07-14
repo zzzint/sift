@@ -6,7 +6,7 @@ describe(Tokenizer.name, () => {
   const tokenizer = new Tokenizer();
 
   describe(Tokenizer['prototype'].write.name, () => {
-    it('Can process an empty object', () => {
+    it('should process an empty object', () => {
       const generator = tokenizer.write(
         Buffer.from(mockJsonStrings.simpleObject)
       );
@@ -14,7 +14,7 @@ describe(Tokenizer.name, () => {
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
     });
 
-    it('Can process an empty array', () => {
+    it('should process an empty array', () => {
       const generator = tokenizer.write(
         Buffer.from(mockJsonStrings.simpleArray)
       );
@@ -22,7 +22,7 @@ describe(Tokenizer.name, () => {
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-end' }));
     });
 
-    it('Can process an object containing a single key and value', () => {
+    it('should process an object containing a single key and value', () => {
       const generator = tokenizer.write(
         Buffer.from(mockJsonStrings.simpleKeyValue)
       );
@@ -36,7 +36,7 @@ describe(Tokenizer.name, () => {
       );
     });
 
-    it('Can process an object containing string, number, boolean, null, and nested values', () => {
+    it('should process an object containing string, number, boolean, null, and nested values', () => {
       const generator = tokenizer.write(
         Buffer.from(mockJsonStrings.comprehensive)
       );
@@ -105,7 +105,7 @@ describe(Tokenizer.name, () => {
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
     });
 
-    it('Can process an array of records', () => {
+    it('should process an array of records', () => {
       const generator = tokenizer.write(Buffer.from(mockJsonStrings.records));
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-start' }));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
@@ -164,7 +164,7 @@ describe(Tokenizer.name, () => {
       expect(generator.next().value).toStrictEqual(t({ kind: 'array-end' }));
     });
 
-    it('Can process a deeply nested object', () => {
+    it('should process a deeply nested object', () => {
       const generator = tokenizer.write(
         Buffer.from(mockJsonStrings.deeplyNested)
       );
@@ -212,7 +212,7 @@ describe(Tokenizer.name, () => {
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-end' }));
     });
 
-    it('Can process a heavily escaped string', () => {
+    it('should process a heavily escaped string', () => {
       const generator = tokenizer.write(Buffer.from(mockJsonStrings.escapes));
       expect(generator.next().value).toStrictEqual(t({ kind: 'object-start' }));
       expect(generator.next().value).toStrictEqual(

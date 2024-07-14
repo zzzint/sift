@@ -15,4 +15,4 @@ export type TokenParserState =
   | 'array-comma';
 
 /** Representative of the type of container the parser is currently operating within */
-export type Container = 'array' | 'object';
+export type TokenParserMode = 'array' | 'object';
