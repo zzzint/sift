@@ -20,13 +20,13 @@ export class Tokenizer {
 
   private *transition(byte: number): Generator<Token> {
     if (this.isSeparator(byte)) yield* this.toSeparator(byte);
-    if (this.isWhitespace(byte)) this.toWhitespace(byte);
-    if (this.isAlphabetical(byte)) this.toAlphabetical(byte);
-    if (this.isNumerical(byte)) this.toNumerical(byte);
-    if (this.isPunctuation(byte)) this.toPunctuation(byte);
+    else if (this.isWhitespace(byte)) this.toWhitespace(byte);
+    else if (this.isNumberRelated(byte)) this.toNumberRelated(byte);
+    else if (this.isAlphabetical(byte)) this.toAlphabetical(byte);
+    else if (this.isPunctuation(byte)) this.toPunctuation(byte);
+
     if (this.isYieldable) yield this.flush();
   }
-
   private flush(): Token {
     if (!this.isYieldable) throw new StateNotFlushableError(this.#state);
 
@@ -48,7 +48,7 @@ export class Tokenizer {
   }
 
   private convertBufferToNumber(): number {
-    return this.#buffer.reduce((acc, byte) => acc * 10 + (byte - 48), 0);
+    return parseFloat(this.convertBufferToString());
   }
 
   private convertBufferToString(): string {
@@ -56,7 +56,11 @@ export class Tokenizer {
   }
 
   private *toSeparator(byte: number): Generator<Token> {
-    if (this.#state === State.PartialNumber) {
+    if (
+      this.#state === State.PartialNumberInteger ||
+      this.#state === State.PartialNumberDecimal ||
+      this.#state === State.PartialNumberExponentValue
+    ) {
       this.#state = State.YieldableNumber;
       yield this.flush();
     }
@@ -166,19 +170,88 @@ export class Tokenizer {
     }
   }
 
-  private toNumerical(byte: number) {
+  private toNumberRelated(byte: number) {
     switch (this.#state) {
-      case State.PartialNumber:
-      case State.Yielded: {
-        this.#buffer.push(byte);
-        this.#state = State.PartialNumber;
+      case State.Yielded:
+        if (this.isNumber(byte)) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberInteger;
+        } else if (byte === Utf8.HyphenMinus) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberNegative;
+        } else if (byte === Utf8.FullStop) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberDecimal;
+        } else {
+          throw new InvalidTransition({ from: this.#state, to: byte });
+        }
         break;
-      }
-
-      case State.PartialString: {
-        this.#buffer.push(byte);
+      case State.PartialNumberNegative:
+        if (this.isNumber(byte)) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberInteger;
+        } else if (byte === Utf8.FullStop) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberDecimal;
+        } else {
+          throw new InvalidTransition({ from: this.#state, to: byte });
+        }
         break;
-      }
+      case State.PartialNumberInteger:
+        if (this.isNumber(byte)) {
+          this.#buffer.push(byte);
+        } else if (byte === Utf8.FullStop) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberDecimal;
+        } else if (
+          byte === Utf8.LatinSmallLetterE ||
+          byte === Utf8.LatinCapitalLetterE
+        ) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberExponent;
+        } else {
+          throw new InvalidTransition({ from: this.#state, to: byte });
+        }
+        break;
+      case State.PartialNumberDecimal:
+        if (this.isNumber(byte)) {
+          this.#buffer.push(byte);
+        } else if (
+          byte === Utf8.LatinSmallLetterE ||
+          byte === Utf8.LatinCapitalLetterE
+        ) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberExponent;
+        } else {
+          throw new InvalidTransition({ from: this.#state, to: byte });
+        }
+        break;
+      case State.PartialNumberExponent:
+        if (this.isNumber(byte)) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberExponentValue;
+        } else if (byte === Utf8.HyphenMinus || byte === Utf8.PlusSign) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberExponentSign;
+        } else {
+          throw new InvalidTransition({ from: this.#state, to: byte });
+        }
+        break;
+      case State.PartialNumberExponentSign:
+      case State.PartialNumberExponentValue:
+        if (this.isNumber(byte)) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberExponentValue;
+        } else {
+          throw new InvalidTransition({ from: this.#state, to: byte });
+        }
+        break;
+      case State.PartialTrue3:
+      case State.PartialString:
+        this.toAlphabetical(byte);
+        break;
+      default:
+        throw new InvalidTransition({ from: this.#state, to: byte });
     }
   }
 
@@ -266,8 +339,22 @@ export class Tokenizer {
     );
   }
 
-  private isNumerical(byte: number): boolean {
+  private isNumber(byte: number): boolean {
     return byte >= Utf8.DigitZero && byte <= Utf8.DigitNine;
+  }
+
+  private isNumberRelated(byte: number): boolean {
+    return this.isNumber(byte) || this.isNumberSpecialChar(byte);
+  }
+
+  private isNumberSpecialChar(byte: number): boolean {
+    return (
+      byte === Utf8.HyphenMinus ||
+      byte === Utf8.FullStop ||
+      byte === Utf8.LatinSmallLetterE ||
+      byte === Utf8.LatinCapitalLetterE ||
+      byte === Utf8.PlusSign
+    );
   }
 
   private isWhitespace(byte: number): boolean {
