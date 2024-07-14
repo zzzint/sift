@@ -34,6 +34,7 @@ export enum TokenizerState {
   PartialNumberExponent = 'PartialNumberExponent',
   PartialNumberExponentSign = 'PartialNumberExponentSign',
   PartialNumberExponentValue = 'PartialNumberExponentValue',
+  PartialNumberLeadingZero = 'PartialNumberLeadingZero',
   PartialTrue1 = 'PartialTrue1',
   PartialTrue2 = 'PartialTrue2',
   PartialTrue3 = 'PartialTrue3',

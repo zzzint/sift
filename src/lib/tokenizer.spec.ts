@@ -222,6 +222,37 @@ describe(Tokenizer.name, () => {
       );
       expect(gen.next().value).toStrictEqual(t({ kind: 'object-end' }));
     });
+
+    it('should process special numbers', () => {
+      const gen = tokenizer.write(Buffer.from(mocks.edge['special-numbers']));
+      expect(gen.next().value).toStrictEqual(t({ kind: 'object-start' }));
+      expect(gen.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'zero' })
+      );
+      expect(gen.next().value).toStrictEqual(t({ kind: 'colon' }));
+      expect(gen.next().value).toStrictEqual(t({ kind: 'number', value: 0 }));
+      expect(gen.next().value).toStrictEqual(t({ kind: 'comma' }));
+      expect(gen.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'negativeZero' })
+      );
+      expect(gen.next().value).toStrictEqual(t({ kind: 'colon' }));
+      expect(gen.next().value).toStrictEqual(t({ kind: 'number', value: -0 }));
+      expect(gen.next().value).toStrictEqual(t({ kind: 'comma' }));
+      expect(gen.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'fractional' })
+      );
+      expect(gen.next().value).toStrictEqual(t({ kind: 'colon' }));
+      expect(gen.next().value).toStrictEqual(
+        t({ kind: 'number', value: 0.123 })
+      );
+      expect(gen.next().value).toStrictEqual(t({ kind: 'comma' }));
+      expect(gen.next().value).toStrictEqual(
+        t({ kind: 'string', value: 'negativeInteger' })
+      );
+      expect(gen.next().value).toStrictEqual(t({ kind: 'colon' }));
+      expect(gen.next().value).toStrictEqual(t({ kind: 'number', value: -42 }));
+      expect(gen.next().value).toStrictEqual(t({ kind: 'object-end' }));
+    });
   });
 
   describe(Tokenizer.prototype['isAlphabetical'].name, () => {

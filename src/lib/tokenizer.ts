@@ -59,7 +59,8 @@ export class Tokenizer {
     if (
       this.#state === State.PartialNumberInteger ||
       this.#state === State.PartialNumberDecimal ||
-      this.#state === State.PartialNumberExponentValue
+      this.#state === State.PartialNumberExponentValue ||
+      this.#state === State.PartialNumberLeadingZero
     ) {
       this.#state = State.YieldableNumber;
       yield this.flush();
@@ -173,7 +174,10 @@ export class Tokenizer {
   private toNumberRelated(byte: number) {
     switch (this.#state) {
       case State.Yielded:
-        if (this.isNumber(byte) && byte !== Utf8.DigitZero) {
+        if (byte === Utf8.DigitZero) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberLeadingZero;
+        } else if (this.isNumber(byte)) {
           this.#buffer.push(byte);
           this.#state = State.PartialNumberInteger;
         } else if (byte === Utf8.HyphenMinus) {
@@ -187,12 +191,29 @@ export class Tokenizer {
         }
         break;
       case State.PartialNumberNegative:
-        if (this.isNumber(byte)) {
+        if (byte === Utf8.DigitZero) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberLeadingZero;
+        } else if (this.isNumber(byte)) {
           this.#buffer.push(byte);
           this.#state = State.PartialNumberInteger;
         } else if (byte === Utf8.FullStop) {
           this.#buffer.push(byte);
           this.#state = State.PartialNumberDecimal;
+        } else {
+          throw new InvalidTransition({ from: this.#state, to: byte });
+        }
+        break;
+      case State.PartialNumberLeadingZero:
+        if (byte === Utf8.FullStop) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberDecimal;
+        } else if (
+          byte === Utf8.LatinSmallLetterE ||
+          byte === Utf8.LatinCapitalLetterE
+        ) {
+          this.#buffer.push(byte);
+          this.#state = State.PartialNumberExponent;
         } else {
           throw new InvalidTransition({ from: this.#state, to: byte });
         }
