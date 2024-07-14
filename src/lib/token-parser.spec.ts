@@ -140,78 +140,78 @@ describe(TokenParser.name, () => {
       });
     });
 
-    // describe(`Parsing with registered paths`, () => {
-    //   it('should process an empty object with no registered paths', () => {
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleObject);
-    //     expect(gen.next().value).toEqual({});
-    //   });
+    describe(`Parsing with registered paths`, () => {
+      it('should process an empty object with no registered paths', () => {
+        const parsed = tokenizeAndGenerateJson(mocks.simple['empty-object']);
+        expect(parsed).toEqual({});
+      });
 
-    //   it('should process a simple key-value object with registered path', () => {
-    //     parser.registerPath('key');
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleKeyValue);
-    //     expect(gen.next().value).toEqual({ key: 'value' });
-    //   });
+      it('should process a simple key-value object with registered path', () => {
+        parser.registerPath('key');
+        const parsed = tokenizeAndGenerateJson(mocks.simple['key-value']);
+        expect(parsed).toEqual({ key: 'value' });
+      });
 
-    //   it('should process a simple key-value object with no registered path', () => {
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleKeyValue);
-    //     expect(gen.next().value).toEqual({ key: 'value' });
-    //   });
+      it('should process a simple key-value object with no registered path', () => {
+        const parsed = tokenizeAndGenerateJson(mocks.simple['key-value']);
+        expect(parsed).toEqual({ key: 'value' });
+      });
 
-    //   it('should process a comprehensive object with registered paths', () => {
-    //     parser.registerPath('number');
-    //     parser.registerPath('string');
-    //     parser.registerPath('array');
-    //     parser.registerPath('object');
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleComprehensive);
+      it('should process a comprehensive object with registered paths', () => {
+        parser.registerPath('number');
+        parser.registerPath('string');
+        parser.registerPath('array');
+        parser.registerPath('object');
+        const parsed = tokenizeAndGenerateJson(mocks.simple['comprehensive']);
 
-    //     expect(gen.next().value).toEqual({
-    //       number: 42,
-    //       string: 'Hello, world!',
-    //       array: [1, 2, 3],
-    //       object: { nested: 'value' },
-    //     });
-    //   });
+        expect(parsed).toEqual({
+          number: 42,
+          string: 'Hello, world!',
+          array: [1, 2, 3],
+          object: { nested: 'value' },
+        });
+      });
 
-    //   it('should process a nested object with a registered nested path', () => {
-    //     parser.registerPath('object.nested');
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleComprehensive);
-    //     expect(gen.next().value).toEqual({
-    //       object: {
-    //         nested: 'value',
-    //       },
-    //     });
-    //   });
+      it('should process a nested object with a registered nested path', () => {
+        parser.registerPath('object.nested');
+        const parsed = tokenizeAndGenerateJson(mocks.simple['comprehensive']);
+        expect(parsed).toEqual({
+          object: {
+            nested: 'value',
+          },
+        });
+      });
 
-    //   it('should process an array of objects with registered paths', () => {
-    //     parser.registerPath('id');
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleRecords);
-    //     expect(gen.next().value).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
-    //   });
+      it('should process an array of objects with registered paths', () => {
+        parser.registerPath('id');
+        const parsed = tokenizeAndGenerateJson(mocks.simple['records']);
+        expect(parsed).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+      });
 
-    //   it('should process a deeply nested object with registered deep path', () => {
-    //     parser.registerPath('deeply.nested.object.with');
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleDeep);
-    //     expect(gen.next().value).toEqual({
-    //       deeply: {
-    //         nested: {
-    //           object: {
-    //             with: ['an', 'array', { inside: 'it' }],
-    //           },
-    //         },
-    //       },
-    //     });
-    //   });
+      it('should process a deeply nested object with registered deep path', () => {
+        parser.registerPath('deeply.nested.object.with');
+        const parsed = tokenizeAndGenerateJson(mocks.simple['deep']);
+        expect(parsed).toEqual({
+          deeply: {
+            nested: {
+              object: {
+                with: ['an', 'array', { inside: 'it' }],
+              },
+            },
+          },
+        });
+      });
 
-    //   it('should handle path prefixes', () => {
-    //     parser.registerPath('object');
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleComprehensive);
-    //     expect(gen.next().value).toEqual({ object: { nested: 'value' } });
-    //   });
+      it('should handle path prefixes', () => {
+        parser.registerPath('object');
+        const parsed = tokenizeAndGenerateJson(mocks.simple['comprehensive']);
+        expect(parsed).toEqual({ object: { nested: 'value' } });
+      });
 
-    //   it('should process an empty array with no registered paths', () => {
-    //     const gen = tokenizeAndGenerateJson(mocks.simpleArray);
-    //     expect(gen.next().value).toEqual([]);
-    //   });
-    // });
+      it('should process an empty array with no registered paths', () => {
+        const parsed = tokenizeAndGenerateJson(mocks.simple['empty-array']);
+        expect(parsed).toEqual([]);
+      });
+    });
   });
 });
