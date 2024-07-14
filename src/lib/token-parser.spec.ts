@@ -108,16 +108,16 @@ describe(TokenParser.name, () => {
         });
       });
 
-      describe.skip('Parity for edge cases', () => {
+      describe('Parity for edge cases', () => {
         it('should handle empty arrays', () => {
           const mock = mocks.edge['empty-arrays'];
           expect(tokenizeAndGenerateJson(mock)).toEqual(jp(mock));
         });
-        it('should handle null characters', () => {
+        it.skip('should handle null characters', () => {
           const mock = mocks.edge['null-characters'];
           expect(tokenizeAndGenerateJson(mock)).toEqual(jp(mock));
         });
-        it('should handle json in strings', () => {
+        it.skip('should handle json in strings', () => {
           const mock = mocks.edge['json-in-string'];
           expect(tokenizeAndGenerateJson(mock)).toEqual(jp(mock));
         });
@@ -129,7 +129,7 @@ describe(TokenParser.name, () => {
           const mock = mocks.edge['deep-array'];
           expect(tokenizeAndGenerateJson(mock)).toEqual(jp(mock));
         });
-        it('should handle unusual structures', () => {
+        it.skip('should handle unusual structures', () => {
           const mock = mocks.edge['unusual-structures'];
           expect(tokenizeAndGenerateJson(mock)).toEqual(jp(mock));
         });
