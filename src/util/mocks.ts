@@ -15,6 +15,20 @@ export const generateMockJsonStreamFromInput = (
   return asStream;
 };
 
+export const generateMockJsonStreamFromString = (
+  json: string
+): ReadableStream<Buffer> => {
+  const asBuffer = Buffer.from(json);
+  const asStream = new ReadableStream<Buffer>({
+    start(controller) {
+      controller.enqueue(asBuffer);
+      controller.close();
+    },
+  });
+
+  return asStream;
+};
+
 export const mocks = {
   simple: {
     'empty-object': '{}',
