@@ -16,3 +16,4 @@ export type TokenParserState =
 
 /** Representative of the type of container the parser is currently operating within */
 export type TokenParserMode = 'array' | 'object';
+export type TokenParserYieldStrategy = 'entries' | 'values' | 'all';

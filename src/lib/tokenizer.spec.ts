@@ -1,6 +1,6 @@
 import { mocks } from 'src/util/mocks';
 import { Tokenizer } from './tokenizer';
-import { Token, Utf8 } from './tokenizer.types';
+import { Token } from './tokenizer.types';
 
 describe(Tokenizer.name, () => {
   const tokenizer = new Tokenizer();

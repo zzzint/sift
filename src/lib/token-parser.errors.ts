@@ -14,23 +14,3 @@ export class UnexpectedChar extends Error {
     );
   }
 }
-
-export class StrategyAdjustment extends Error {
-  constructor() {
-    super(
-      'Adjusting the yield strategy after parsing has begun is not allowed'
-    );
-  }
-}
-
-export class MultipleStrategies extends Error {
-  constructor() {
-    super('Multiple yield strategies are not allowed.');
-  }
-}
-
-export class NoStrategyExists extends Error {
-  constructor() {
-    super('');
-  }
-}

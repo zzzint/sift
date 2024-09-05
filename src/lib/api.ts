@@ -8,17 +8,21 @@ export const makeGenerator = <T extends Json>(
 ): Api<T> => {
   const scanner = new Scanner<T>(stream);
 
-  function builder() {
-    return {
-      take(path: string) {
-        scanner.registerTake(path);
-        return builder();
-      },
-      build() {
-        return scanner.scan();
-      },
-    };
-  }
+  return () => ({
+    yieldEachEntry(path: string) {
+      return builder();
+    },
+    yieldEachValue(path: string) {
+      return builder();
+    },
 
-  return builder() as unknown as Api<T>;
+    take(path: string) {
+      scanner.registerTake(path);
+      return builder();
+    },
+
+    build() {
+      return scanner.scan();
+    },
+  });
 };

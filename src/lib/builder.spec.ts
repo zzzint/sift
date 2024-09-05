@@ -138,4 +138,15 @@ describe(Builder.name, () => {
     builder.openObject();
     expect(() => builder.set(null, 'value')).toThrow(UnexpectedKeyForContainer);
   });
+
+  describe.skip(Builder['prototype'].popObjectEntry.name, () => {
+    it('should return the most recently added key/value pair', () => {
+      builder.openObject();
+      builder.set('k1', 'v1');
+      builder.set('k2', 'v2');
+      expect(builder.popObjectEntry()).toEqual({
+        k2: 'v2',
+      });
+    });
+  });
 });

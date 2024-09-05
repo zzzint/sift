@@ -6,6 +6,8 @@ import {
 } from './builder.errors';
 import { Json } from 'src/util/types';
 
+// TODO: Explore storing object key-value pairs as tuples until they need to be yielded/popped
+
 /** For dynamically constructing Json-like structures. */
 export class Builder {
   /** The root of the Json structure being built. */
@@ -38,6 +40,20 @@ export class Builder {
     if (this.#stack.length > 0) this.#stack.pop();
   }
 
+  /** Pop and return the most recent key/value pair from the current stack if it's an object */
+  public popObjectEntry() {
+    if (this.#stack.length === 0) return;
+    if (Array.isArray(this.head)) return;
+    if (!isObject(this.head)) return;
+    const obj = this.head as Record<string, Json>;
+  }
+
+  public popArrayValue() {
+    if (this.#stack.length === 0) return;
+    if (!Array.isArray(this.head)) return;
+    const arr = this.head;
+  }
+
   private get head() {
     return this.#stack[this.#stack.length - 1].value;
   }
@@ -59,6 +75,7 @@ export class Builder {
 
   private addValueToObject(obj: Json & object, key: BuilderKey, value: Json) {
     if (key === null) throw new UnexpectedKeyForContainer(key, 'object');
+    // TODO: This should ideally be the responsibility of the parser.
     if (key in obj) throw new KeyAlreadyInObject(key);
     obj[key] = value;
   }

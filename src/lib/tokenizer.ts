@@ -27,6 +27,7 @@ export class Tokenizer {
 
     if (this.isYieldable) yield this.flush();
   }
+
   private flush(): Token {
     if (!this.isYieldable) throw new StateNotFlushableError(this.#state);
 

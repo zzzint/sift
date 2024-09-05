@@ -1,9 +1,10 @@
 import { Json } from 'src/util/types';
 import { Builder } from './builder';
-import { InvalidTransition, UnexpectedChar } from './token-parser-errors';
+import { InvalidTransition, UnexpectedChar } from './token-parser.errors';
 import {
   TokenParserMode as Mode,
   TokenParserState as State,
+  TokenParserYieldStrategy as YieldStrategy,
 } from './token-parser.types';
 import { isPrimitiveToken } from './tokenizer';
 import { PrimitiveToken, Token, TypeOfToken } from './tokenizer.types';
@@ -13,18 +14,25 @@ export class TokenParser {
   #state: State = 'begin';
   #builder: Builder = new Builder();
   #currentKey: string | null = null;
+  #strategy: YieldStrategy = 'all';
 
   #stacks = {
+    /** For keeping track of what kind of nested containers we're in, ie [] | {} */
     mode: Array.from<Mode>([]),
+    /** For keeping track of what nested object path we're in. */
     path: Array.from<string>([]),
   };
 
   #registries = {
-    /** A collection of paths that should be included in the Json yielded from this classes write method. */
     path: new Set<string>(),
   };
 
   public registerPath(path: string) {
+    this.#registries.path.add(path);
+  }
+
+  public registerYieldStrategy(path: string, strategy: YieldStrategy) {
+    this.#strategy = strategy;
     this.#registries.path.add(path);
   }
 
@@ -53,6 +61,15 @@ export class TokenParser {
     return this.#builder.root;
   }
 
+  private get yieldable() {
+    return true;
+  }
+
+  private set currentKey(k: string | null) {
+    this.#currentKey = k;
+    if (k !== null) this.#stacks.path.push(k);
+  }
+
   private get currentPathIsRegistered() {
     // TODO: Make this more efficient & ensure via tests that it isn't returning true when it shouldn't
     if (this.#registries.path.size === 0) return true;
@@ -72,11 +89,6 @@ export class TokenParser {
     );
 
     return registeredParentSegmentExists || registeredChildSegmentExists;
-  }
-
-  private setCurrentKey(k: string | null) {
-    this.#currentKey = k;
-    if (k !== null) this.#stacks.path.push(k);
   }
 
   private makeInvalidTransitionError(next: Token): InvalidTransition {
@@ -99,7 +111,7 @@ export class TokenParser {
       }
       this.#stacks.mode.push('array');
       this.#state = 'array-start';
-      this.setCurrentKey(null);
+      this.currentKey = null;
     } else throw this.makeInvalidTransitionError(token);
   }
 
@@ -135,7 +147,7 @@ export class TokenParser {
         this.#builder.openObject(this.#currentKey);
       this.#stacks.mode.push('object');
       this.#state = 'object-start';
-      this.setCurrentKey(null);
+      this.currentKey = null;
     } else throw this.makeInvalidTransitionError(token);
   }
 
@@ -172,7 +184,7 @@ export class TokenParser {
         }
 
         this.#state = this.mode === 'array' ? 'array-value' : 'object-value';
-        this.setCurrentKey(null);
+        this.currentKey = null;
         break;
       }
       case 'object-start':
@@ -181,7 +193,7 @@ export class TokenParser {
           throw this.makeInvalidTransitionError(token);
         }
 
-        this.setCurrentKey(token.value);
+        this.currentKey = token.value;
         this.#state = 'object-key';
         break;
       }
